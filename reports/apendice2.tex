@@ -1,0 +1,98 @@
+\chapter{Mecanismo de Higgs}
+Cuando existe rompimiento de simetr\'ia el resultado es un campo 
+vectorial con masa, junto con el campo escalar del Higgs que tambi\'en tiene 
+masa. Que un generador $\mathcal{G}$ deje invariante el vac\'io significa que 
+$$
+e^{i\alpha \mathcal{G}}\langle\Phi \rangle_0=\langle\Phi\rangle_0.
+$$
+Para una transformaci\'on infinitesimal lo anterior se  expresa como
+$$
+(1+i\alpha \mathcal{G})\langle\Phi\rangle_0=\langle\Phi\rangle_0,
+$$
+as\'i que la condici\'on para que $\mathcal{G}$ deje invariante el vac\'io es 
+$$
+\mathcal{G}\langle\Phi\rangle_0=0.
+$$
+Si los generadores de $\gme$ rompen la simetr\'ia local, los bosones de norma
+correspondientes adquirir\'an masa. Se busca que s\'olo uno de ellos, el 
+fot\'on, permanezca sin masa. Para los generadores de $\gme$ se tienen los 
+siguientes c\'alculos
+\be\label{6.3.23}
+\tau_1\vevh=\mpi\left(\ba{c} 0\\ v \ea\right)=\left(\ba{c} v\\ 0 \ea\right)
+\neq 0,
+\ee
+\be\label{6.3.24}
+\tau_2\vevh=\mpii\left(\ba{c} 0\\ v \ea\right)=\left(\ba{c} -iv\\ 0 \ea\right)
+\neq 0,
+\ee
+\be\label{6.3.25}
+\tau_3\vevh=\mpiii\left(\ba{c} 0\\ v \ea\right)=\left(\ba{c} 0\\ -v \ea\right)
+\neq 0,
+\ee
+\be\label{6.3.26}
+Y\vevh=+1\vevh\neq 0,
+\ee
+con lo que se ve que hay rompimiento de simetr\'ia. Utilizando la relaci\'on de
+Gell-Mann-Nishijima ~(\ref{rgmn}) se observa que
+\be\label{27}
+Q\vevh=\frac{1}{2}\left(\tau_3+\frac{Y}{2}\right)\vevh=0.
+\ee
+Los cuatro generadores rompen la simetr\'ia ~(\ref{6.3.23}-\ref{6.3.26}), pero 
+la combinaci\'on lineal correspondiente a la carga el\'ectrica ~(\ref{rgmn}) 
+deja invariante el vacio ~(\ref{27}), as\'i el fot\'on permanecer\'a sin masa
+\footnote{Para mayor detalle en la lagrangiana de Higgs ver ap\'endice 1} 
+
+En la lagrangiana de Higgs ~(\ref{lhiggs}) la energ\'ia potencial
+$V(\Phi^{\dag}\Phi)$ tiene la forma
+$$
+V(\Phi^{\dag}\Phi)=\frac{m^2}{2v^2}[(\Phi^{\dag}\Phi)-v^2]^2.
+$$
+Cuando se sustituye el valor del estado excitado ~(\ref{vevhe}) se obtiene el
+potencial del Higgs despu\'es del rompimiento espont\'aneo de simetr\'ia, cuya
+expresi\'on es
+\be\label{phdres}
+V(\Phi^{\dag}\Phi)=m^2h^2+\frac{m^2h^3}{\sqrt{2}v}+\frac{m^2h^4}{8v^2}=V(h),
+\ee
+con lo cual la densidad lagrangiana invariante de norma localmente para el 
+Higgs es
+$$
+\mathcal{L}_{\Phi}=(D_{\mu}\Phi)^{\dag}(D^{\mu}\Phi)-V(h)
+$$
+donde $D_{\mu}$ es la derivada covariante dada por ~(\ref{dcme}). Entonces, 
+usando ~(\ref{vevhe}) la lagrangiana toma la forma
+$$\ba{lr}
+\mathcal{L}_{\Phi}&=\frac{1}{2}\partial_{\mu}h\partial^{\mu}h+\frac{g^2_2}{4}
+\left(W^1_{\mu}+iW^2_{\mu}\right)\left(W^{1\mu}-iW^{2\mu}\right)\left(v+
+\frac{h}{\sqrt{2}}\right)^2\\ &+\left[\frac{g^2_2}{4}W^3_{\mu}W^{3\mu}-
+\frac{g_1g_2}{2}W^3_{\mu}B^{\mu}+\frac{g^2_1}{4}B_{\mu}B^{\mu}\right]\left(v+
+\frac{h}{\sqrt{2}}\right)^2-V(h)\ea
+$$
+
+que se reduce a
+
+\be\label{lh}
+\mathcal{L}_{\Phi}=\frac{1}{2}\partial_{\mu}h\partial^{\mu}h+\frac{g^2_2}{2}
+W^-_{\mu}W^{+\mu}\left(v+\frac{h}{\sqrt{2}}\right)^2+\frac{1}{4}\left(g^2_2
++g^2_1\right)Z_{\mu}Z^{\mu}\left(v+\frac{h}{\sqrt{2}}\right)^2-V(h).
+\ee
+Los t\'erminos en ~(\ref{lh}) proporcionales al cuadrado de $v$ son t\'erminos 
+de masa. Los campos de los bosones $W^{1\mu}$ y $W^{2\mu}$ fueron reemplazados 
+por la combinaci\'on lineal de ellos
+\be\label{cnws}
+W^{\pm}\equiv\frac{(W^{\mu}_1\mp iW^{\mu}_2)}{\sqrt{2}}.
+\ee
+La  forma de $Z^{\mu}$ es
+\be\label{bz}
+Z^{\mu}=W^{3\mu}\cos\theta_W-B^{\mu}\sin\theta_W,
+\ee
+donde
+$$
+\cos\theta_W=\frac{g_2}{\left(g^2_1+g^2_2\right)^{\frac{1}{2}}},\qquad
+\sin\theta_W=\frac{g_1}{\left(g^2_1+g^2_2\right)^{\frac{1}{2}}}.
+$$
+A $\theta_W$ se le llama el \'angulo de Weinberg. Se observa en ~(\ref{lh}) que
+despu\'es del rompimiento de simetr\'ia los bosones de norma $W^{\pm\mu}$ y 
+$Z^{\mu}$ adquieren masa.
+
+
+

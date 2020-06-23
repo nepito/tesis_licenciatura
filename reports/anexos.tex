@@ -1,0 +1,462 @@
+\chapter{C\'odigo}
+C\'odigo en Matlab 8 ~\cite{matlab} de la funci\'on que se usa para poner a
+prueba los modelos de texturas utilizando algoritmos gen\'eticos y las funciones
+que se usan en ella.
+\section{Algoritmo Gen\'etico}
+\begin{verbatim}
+%% Algoritmo Genetico
+% Proporciona los valores de las masas, fases y parametros libres que mejor
+% ajusten a los valores experimentales a los modelos de las texturas en las
+% matrices de masa.
+%Los parametros de entrada son n= el tamano de la poblacion.
+%bmasas=intervalos de masas que se usan 1=Xing, 2=Koide y 3=Emmanuel-Costa
+%bpdg  =datos experimenteles con los que se compararan los modelos,
+%dependiendo del ano 
+%bt = al modelos de la textura puesto a prueba 1=F4, 2=F2F3, 3=F3F2, 4=F2R1 
+% y 5=R1F2.
+
+function [poblacion,hist] = funalg_texturas_ultimate3(n,bmasa,bpdg,bt)
+
+%% Parametros iniciales
+% Se configua el Algoritmo definiendo parametros analogos en la Genatica
+format long
+ %Se crean la poblacion inicial y se cargan los datos experimentales.
+%[poblacion,imu,imd,V,Vint,Ver,angu]=fundatexp(n,bmasa,bpdg);     
+                             
+generaciones = 15;            %Numero de generaciones que se dejara evolucionar
+                              %al sistema
+guardar      = 3;             %Numero de datos que se guardan
+nC           = 20;            %Numero de cuates por parejas
+migra        = 0;             %Generacion espontanea  
+probabilidad = 1.0;           % probabilidad de que cada gen mute
+hist=ones(guardar,12);        %Se crea la matriz hist. Donde se guada la 
+                              %evolucion de la poblacion
+par=11;                       %Parametros
+obs=1;                        %Observables
+                              %Maximo valor de la mutacion
+mutacion = [0.00000250 0.0003 0.0115 0.00250 0.00000350 0.00075 0.00035 0.00250
+            0.01 0.01 0.01]/5;
+%% Poblaci�n inicial
+% Se genera aleatoriamente una poblacion inicial de posibles soluciones.
+% Las primeras 4 columnas representan los genes del sector u. Las
+% siguientes 4 columnas representan los genes del sector d. Las ultimas 4
+% columnas son las 3 fases posibles y la funcion desebilidad.
+% Cada uno de los n individuos (renglones) representa una posible soluci�n.
+%poblacion = rand(n,2);
+imu=zeros(2,4);
+imd=zeros(2,7);
+[poblacion,imu,imd,V,Vint,Ver,ang]=fundatexp(n,bmasa,bpdg);
+
+%% Iteraciones
+% La poblacion de soluciones evoluciona mediante la cruza y mutacion
+for ci= 1:guardar
+    hw = waitbar(0,'Evolucionando...');
+    for i = 1:generaciones
+        temporal=zeros(2*(n*(nC+1)+migra),par+obs);
+        %% Orden aleatorio de parejas
+        % La formacion de parejas para la reproduccion es aletoria
+        poblacion(:,par+1:obs+par) = rand(n,obs);
+        poblacion = sortrows(poblacion,+(par+1));
+        temporal(1:n,:) = poblacion;
+%% Cruza
+        for j=1:n/2
+            mama=rand(nC,par+obs)>0.5;
+            papa=~mama;
+            temporal(n+1+   (2*nC*(j-1)):n+   (2*nC*(j-1))+nC,:) =
+repmat(poblacion(2*j,:),nC,1).*mama + repmat(poblacion(2*j-1,:),nC,1).*papa;
+            temporal(n+1+nC+(2*nC*(j-1)):n+nC+(2*nC*(j-1))+nC,:) =
+repmat(poblacion(2*j,:),nC,1).*papa + repmat(poblacion(2*j-1,:),nC,1).*mama;
+        end
+ %Generacion Espontanea
+        temporal(n*(nC+1)+1:n*(nC+1)+migra,:) = [repmat(imu(1,:),migra,1)+
+repmat((imu(2,:)-imu(1,:)),migra,1).*rand(migra,4) repmat(imd(1,:),migra,1)+
+repmat((imd(2,:)-imd(1,:)),migra,1).*rand(migra,7) rand(migra,obs)];
+        s=n*(nC+1)+migra;
+%% Mutacion
+        %Se calcula la mutacion, los limites permitidos y se muta. 
+        muta=(rand(s,par+obs)*2-1).*repmat([mutacion zeros(1,obs)],s,1);
+        mayor=[repmat(imu(2,:),s,1)-temporal(1:s,1:4) repmat(imd(2,:),s,1)-
+temporal(1:s,5:11) zeros(s,obs)];
+        menor=[repmat(imu(1,:),s,1)-temporal(1:s,1:4) repmat(imd(1,:),s,1)-
+temporal(1:s,5:11) ones(s,obs)];
+        b=(rand(s,par+obs)<probabilidad).*(mayor>muta).*(menor<muta);
+        temporal(s+1:2*s,:)=temporal(1:s,:)+b.*muta;
+%% Calculo de la aptitud (o viabilidad)
+        % La columna numero 12 de poblacion representa la aptitud (viabilidad) 
+        % de la solucion, mayor es mejor.
+        temporal=funaptult(temporal,V,Vint,ang,bt);
+        temporald = unique(temporal,'rows');
+        temporalb = sortrows(temporald,-12);
+        s = min([size(temporalb,1),n]);
+ %Seleccion
+        poblacion = temporalb(1:s,:);
+        waitbar(i/generaciones,hw)
+    end
+    close(hw)
+    hist(ci,:)=poblacion(1,:);
+end
+
+\end{verbatim}
+
+
+\section{Datos experimentales}
+\begin{verbatim}
+%% Datos experimentales
+%Proporciona los valores experimentales de los observables (los modulos de 
+%la matriz de mezcla y la fenomenologia de la violacion de CP) ademas de
+%losintervalos permitidos para las masas, reportados por Xing, Koide y
+%Emmanule-Costa. 
+%Los parametros de entrada son
+%n= El tamano de la poblacion.
+%bmasa= Los intervalos de masa desados 1 Xing, 2 Koide y 3. Emmanuel-Costa
+%bpdg = Los valores reportados en PDG dependiendo del a\~no 1=2008 y
+%2=2010.
+%Los valores de salida son poblacion=poblacion inicial.
+%imu=Intervalos permitidos para los qurks del sector u.
+%imd=Intervalos permitidos para los qurks del sector d.
+%Los valores de experimentales centrales de los modulos de la matriz Vckm.
+%Los intervalos experimentales de los modulos de la matriz Vckm.
+%Los valores experimentales de los observables de la violacion de CP.
+
+function [poblacion,imu,imd,V,Vint,Ver,ang]=fundatexp(n,bmasa,bpdg)
+
+imu=zeros(2,4);
+imd=zeros(2,7);
+if bmasa == 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Xing 2008 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  imu(:,1)=0.00127+[-0.00042;0.00050];       %masa del quark u 1.4+0.6-0.5
+  imd(:,1)=0.00290+[-.00119;0.001240];       %masa del quark d 2.8+-0.7
+  imd(:,2)=0.055+[-0.0150;0.016];         %masa del quark s 60+15-19
+  imu(:,2)=0.619+[-0.084;0.084];          %masa del quark c 0.64+0.07-0.09
+  imd(:,3)=2.89+[-0.09;0.09];          %masa del quark b 2.84+0.17-0.08
+  imu(:,3)=171.7+[-3;3];        %masa del quark t 170.1+-2.3
+end
+if bmasa == 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%% Koide 2010 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ imu(:,1)=0.00233 +[-0.00045;0.00042];       %masa del quark u 1.4+0.6-0.5
+ imd(:,1)=0.00469 +[-0.00066;0.00060];       %masa del quark d 2.8+-0.7
+ imd(:,2)=0.0934  +[-0.0130;0.0118];         %masa del quark s 60+15-19
+ imu(:,2)=0.677   +[-0.061;0.056];          %masa del quark c 0.64+0.07-0.09
+ imd(:,3)=3       +[-0.11;0.11];          %masa del quark b 2.84+0.17-0.08
+ imu(:,3)=181     +[-13;13];        %masa del quark t 170.1+-2.3
+end
+if bmasa == 3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%% Emmanuel-Costa 2009 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ imu(:,1)=0.0014  +[-0.0005;0.00060];       %masa del quark u 1.4+0.6-0.5
+ imd(:,1)=0.00280 +[-.0007;0.0007];       %masa del quark d 2.8+-0.7
+ imd(:,2)=0.060   +[-0.0190;0.015];         %masa del quark s 60+15-19
+ imu(:,2)=0.64    +[-0.09;0.07];          %masa del quark c 0.64+0.07-0.09
+ imd(:,3)=2.89    +[-0.08;0.17];          %masa del quark b 2.84+0.17-0.08
+ imu(:,3)=170.1   +[-2.3;2.3];        %masa del quark t 170.1+-2.3
+end
+
+imu(:,4)=[0;sum(imu(:,3),1)/2];                %intervalo del Parametro libre
+imd(:,4)=[0;sum(imd(:,3),1)/2];                %intervalo del Parametro Libre
+imd(:,5)=2*pi*[0;1];        %Intervalo de los angulos
+imd(:,6)=2*pi*[0;1];        %Intervalo de los angulos
+imd(:,7)=2*pi*[0;1];        %Intervalo de los angulos 
+
+%Modulos de la matriz de mezcla y sus errores
+if bpdg == 1 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PDG 2008 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ V(1,1) = 0.97419;
+ V(1,2) = 0.2257;
+ V(2,1) = 0.2256;
+ V(2,2) = 0.97334;
+ V(2,3) = 0.0415;   
+ V(1,3) = 3.59/10^3;
+ V(3,1) = 8.74/10^3;
+ V(3,2) = 40.7/10^3;
+ V(3,3) = 0.999133;
+
+ Vint=zeros(3,3,2);
+ Vint(1,1,1)=-0.00022;
+ Vint(1,2,1)=-0.0010;
+ Vint(1,3,1)=-0.00016;
+ Vint(2,1,1)=-0.0010;
+ Vint(2,2,1)=-0.00023;
+ Vint(2,3,1)=-0.0011;
+ Vint(3,1,1)=-0.00037;
+ Vint(3,2,1)=-0.0010;
+ Vint(3,3,1)=-0.00043;
+ Vint(1,1,2)=0.00022;
+ Vint(1,2,2)=0.0010;
+ Vint(1,3,2)=0.00016;
+ Vint(2,1,2)=0.0010;
+ Vint(2,2,2)=0.00023;
+ Vint(2,3,2)=0.0010;
+ Vint(3,1,2)=0.00026;
+ Vint(3,2,2)=0.0010;
+ Vint(3,3,2)=0.00044;
+ 
+ ang(1,1) = 3.05/10^5;         %PDG 2008
+ ang(2,1) = 0.20/10^5;         %PDG 2008
+ ang(1,2) = 88;                %PDG 2008
+ ang(2,2) = 6.0;               %PDG 2008
+ ang(1,3) = 77;                %PDG 2008
+ ang(2,3) = 32;                %PDG 2008
+ 
+end
+if bpdg == 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PDG 2010 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    V(1,1) = 0.97428;
+    V(1,2) = 0.2253;
+    V(2,1) = 0.2252;
+    V(2,2) = 0.97345;
+    V(2,3) = 0.0410;
+    V(1,3) = 3.47/10^3;
+    V(3,1) = 8.62/10^3;
+    V(3,2) = 40.3/10^3;
+    V(3,3) = 0.999152;
+
+    Vint=zeros(3,3,2);
+    Vint(1,1,1)=-0.00015;
+    Vint(1,2,1)=-0.0007;
+    Vint(1,3,1)=-0.00012;
+    Vint(2,1,1)=-0.0007;
+    Vint(2,2,1)=-0.00016;
+    Vint(2,3,1)=-0.0007;
+    Vint(3,1,1)=-0.00020;
+    Vint(3,2,1)=-0.0007;
+    Vint(3,3,1)=-0.00045;
+    Vint(1,1,2)=0.00015;
+    Vint(1,2,2)=0.0007;
+    Vint(1,3,2)=0.00016;
+    Vint(2,1,2)=0.0007;
+    Vint(2,2,2)=0.00015;
+    Vint(2,3,2)=0.0011;
+    Vint(3,1,2)=0.00026;
+    Vint(3,2,2)=0.0011;
+    Vint(3,3,2)=0.00030;
+
+    ang(1,1) = 2.91/10^5;       %PDG 2010
+    ang(2,1) = 0.19/10^5;       %PDG 2010
+    ang(1,3) = 89;              %PDG 2010
+    ang(2,3) = 4.4;             %PDG 2010
+    ang(1,2) = 73;              %PDG 2010
+    ang(2,2) = 25;              %PDG 2010 
+end
+ 
+Ver = max(abs(Vint(:,:,1)),Vint(:,:,2));
+
+%Poblacion inicial
+poblacion=[repmat(imu(1,:),n,1)+repmat(imu(2,:)-imu(1,:),n,1).*rand(n,4) 
+repmat(imd(1,:),n,1)+repmat(imd(2,:)-imd(1,:),n,1).*rand(n,7)];  
+\end{verbatim}
+
+\section{Matriz de mezcla}
+\begin{verbatim}
+%% Matriz Vckm
+%Se calcula la matriz de mezcla Vckm, y se unico valor de salida es el
+%valor de la funcion deseabilidad, e.
+%Los parametros de entrada son las matrices que diagonalizan a las matrices
+%de masa del sector u y el sector d (Ou y Od)
+%La matriz de fase, f, de la matriz de mezcla 
+%El valor central de los modulos de la matriz de mezcla
+%Los intervalos permitidos para los modulos de la matriz de mezcla
+%Los valores centrales de los observables de la violacion de CP
+
+function [e]=funmatvu(Ou,Od,f,V,Vint,ang)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%% Parametros de las rectas de funcion deseabilidad %%%%%%%%%%%
+penPos=1./(1-V-Vint(:,:,2));
+penPos(1,1)=1./(V(1,1)+Vint(1,1,1));
+penPos(2,2)=1./(V(2,2)+Vint(2,2,1));
+penPos(3,3)=1./(V(3,3)+Vint(3,3,1));
+b1=(1-2*V-Vint(:,:,1)-Vint(:,:,2))./(1-V-Vint(:,:,2));
+b1(1,1)=0;
+b1(2,2)=0;
+b1(3,3)=0;
+b2=1./(1-V-Vint(:,:,2));
+b2(1,1)=(2*V(1,1)+Vint(1,1,2)+Vint(1,1,1))/(V(1,1)+Vint(1,1,1));
+b2(2,2)=(2*V(2,2)+Vint(2,2,2)+Vint(2,2,1))/(V(2,2)+Vint(2,2,1));
+b2(3,3)=(2*V(3,3)+Vint(3,3,2)+Vint(3,3,1))/(V(3,3)+Vint(3,3,1));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Calculos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+VckmC = Ou*diag(exp(1i*f))*Od;
+%Modulos de los elementos de la matriz de mezcla
+Vckm  = abs(abs(VckmC));
+%Invariante de Jarlskog
+fas(1) = imag(VckmC(1,2)*conj(VckmC(1,3))*conj(VckmC(2,2))*VckmC(2,3));
+%Angulo gamma del triangulo unitario
+fas(2) = angle(-VckmC(3,1)*conj(VckmC(3,3))/(VckmC(1,1)*conj(VckmC(1,3))))*
+180/pi;
+%Angulo alpha del triangulo unitario
+fas(3) = angle(-VckmC(1,1)*conj(VckmC(1,3))/(VckmC(2,1)*conj(VckmC(2,3))))*
+180/pi;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%% Funcion de deseabilidad %%%%%%%%%%%%%%%%%%%%%%%%
+err=ones(3,3);
+for i=1:3
+    for j=1:3
+        if (Vckm(i,j)<V(i,j)+Vint(i,j,1))
+            err(i,j)=Vckm(i,j)*penPos(i,j)+b1(i,j);
+        end
+        if (Vckm(i,j)>V(i,j)+Vint(i,j,2))
+            err(i,j)=-Vckm(i,j)*penPos(i,j)+b2(i,j);
+        end
+    end    
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+f1=1;
+if (fas(3)<ang(1,3)-ang(2,3))
+    f1=1/(360-ang(1,3)-ang(2,3))*fas(3)+1-(ang(1,3)-ang(2,3))/(360-ang(1,3)-
+ang(2,3));
+end
+if (fas(3)>ang(1,3)+ang(2,3))
+    f1=-1/(360-ang(1,3)-ang(2,3))*fas(3)+360/(360-ang(1,3)-ang(2,3));
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+f2=1;
+if (fas(2)<ang(1,2)-ang(2,2))
+    f2=1/(360-ang(1,2)-ang(2,2))*fas(2)+1-(ang(1,2)-ang(2,2))/(360-ang(1,2)-
+ang(2,2));
+end
+if (fas(2)>ang(1,2)+ang(2,2))
+    f2=-1/(360-ang(1,2)-ang(2,2))*fas(2)+360/(360-ang(1,2)-ang(2,2));
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+f3=1; %Invariante de Jarlskog
+if (fas(1)<ang(1,1)-ang(2,1))
+    f3=1/(1+ang(1,1)-ang(2,1))*(fas(1)+1);
+end
+if (fas(1)>ang(1,1)+ang(2,1))
+    f3=1/(1+ang(1,1)-ang(2,1))*(2*ang(1,1)+1-fas(1));
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Resultados %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+d  =sum(sum(err,1),2);
+e  = d+f1+f2+f3;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{verbatim}
+
+\section{Aptitud}
+\begin{verbatim}
+%% Funcion deseabilidad
+% Obtiene el valor de la funcion deseabilidad dependiendo de la textura
+% presente en el modelo.
+%Los parametros de entrada son masa=poblacion
+%V   = el valor central de los modulos de la matriz de mezcla
+%Vint= los intervalos de los modulos de la matriz de mezcla
+%bt  = la textura puesta usada 
+
+function [masa]=funaptult(masa,V,Vint,ang,bt)
+
+s=size(masa,1);
+%Textura de Fritzsch con 4 ceros
+if bt == 1
+    for p=1:s
+        Ou=Fritzsch2(masa(p,1:3),masa(p,4));
+        Od=Fritzsch2(masa(p,5:7),masa(p,8)); 
+        f=masa(p,9:11);            
+        [masa(p,12)]=funmatvu(Ou',Od,f,V,Vint,ang);
+    end
+end
+%Textura de 5 ceros de Fritzsch
+if bt == 2
+    for p=1:s
+        Ou=Fritzsch2(masa(p,1:3),masa(p,4));
+        Od=Fritzsch3(masa(p,5:7),masa(p,8)); 
+        f=masa(p,9:11);            
+        [masa(p,12)]=funmatvu(Ou',Od,f,V,Vint,ang);
+    end
+end
+%Textura de Ramond II
+if bt == 3
+    for p=1:s
+        Ou=Fritzsch3(masa(p,1:3),masa(p,4));
+        Od=Fritzsch2(masa(p,5:7),masa(p,8)); 
+        f=masa(p,9:11);            
+        [masa(p,12)]=funmatvu(Ou',Od,f,V,Vint,ang);
+    end
+end
+%Textura de Ramond IV
+if bt == 4
+    for p=1:s
+        Ou=Fritzsch2(masa(p,1:3),masa(p,4));
+        Od=RRR1(masa(p,5:7),masa(p,8)); 
+        f=masa(p,9:11);            
+        [masa(p,12)]=funmatvu(Ou',Od,f,V,Vint,ang);
+    end
+end
+%Textura de Ramond I
+if bt == 5
+    for p=1:s
+        Ou=RRR1(masa(p,1:3),masa(p,4));
+        Od=Fritzsch2(masa(p,5:7),masa(p,8)); 
+        f=masa(p,9:11);            
+        [masa(p,12)]=funmatvu(Ou',Od,f,V,Vint,ang);
+    end
+end
+\end{verbatim}
+
+\section{Texturas}
+\subsection{Textura de Fritzsch}
+\begin{verbatim}
+%%Textura de Fritzsch con tres ceros
+%Los valores de entrada de la funcion son las masas de los quarks del
+%sector al que se le aplica dicho modelo. El resultado es la matriz que
+%diagonaliza la la matriz de masas.
+%Oq es la matriz diagonalizadora.
+%mmqd es la matriz de masa diagonalizada.
+%Elementos de la matriz de masas
+function [Oq]=Fritzsch3(m)
+Cq=m(1)-m(2)+m(3);
+Aq=(m(1)*m(2)*m(3)/Cq)^(0.5);
+Bq=(m(1)*m(2)+m(2)*m(3)-m(1)*m(3)-Aq^2)^(1/2);
+%Matriz de masa
+Mq=[0,Aq,0;Aq,0,Bq;0,Bq,Cq];
+[Oq,mmud]=eig(Mq);
+\end{verbatim}
+
+\subsection{Textura de Fritzsch modificada}
+\begin{verbatim}
+%%Textura modificada de Fritzsch
+%Los valores de entrada de la funcion son las masas de los quarks del
+%sector al que se le aplica dicho modelo, y el valor del parametri libre 
+%Dq. El resultado es la matriz que diagonaliza la la matriz de masas.
+%Oq es la matriz diagonalizadora.
+%mmqd es la matriz de masa diagonalizada.
+%Elementos de la matriz de masas
+function [Oq,Mq]=Fritzsch2(m,Dq)
+
+Cq=(m(1)-m(2)+m(3))-Dq;
+Aq=(m(1)*m(2)*m(3)/Cq)^(0.5);
+Bq=(Cq*Dq+m(1)*m(2)+m(2)*m(3)-m(1)*m(3)-Aq^2)^(1/2);
+
+%Matriz de masa
+Mq=[0,Aq,0;Aq,Dq,Bq;0,Bq,Cq];
+[Oq,mmud]=eig(Mq);
+\end{verbatim}
+
+\subsection{Textura de Ramond {\it et al.}}
+\begin{verbatim}
+%%Textura de Ramond, Robert y Ross
+%Los valores de entrada de la funcion son las masas de los quarks del
+%sector al que se le aplica dicho modelo. El resultado es la matriz que
+%diagonaliza la la matriz de masas.
+%Oq es la matriz diagonalizadora.
+%mmqd es la matriz de masa diagonalizada.
+%Calculo del elemento Cu
+function [Oq]=RRR1(m)
+    Cq=m(3);
+    for i=1:100
+        Cq=(Cq^2*(m(1)-m(2)+m(3))+Cq*(m(1)*m(2)+m(2)*m(3)-m(1)*m(3))-
+m(1)*m(2)*m(3))^(1/3);
+    end
+    %Cq
+    Dq=m(1)-m(2)+m(3)-Cq;
+    Aq=(m(1)*m(2)*m(3)/Cq)^(0.5);
+%Matriz de masa
+    Mq=[0,Aq,0;Aq,Dq,0;0,0,Cq];
+    [Oq,mmqd]=eig(Mq);
+end
+\end{verbatim}

@@ -1,0 +1,118 @@
+En este trabajo se aplican algor\'itmos gen\'eticos para dar soluci\'on a 
+problemas con respuesta m\'ultiple con el objetivo de determinar el \'optimo
+global dentro de una regi\'on experimental. 
+
+Los resultados permiten inferir que algoritmos gen\'eticos tiene una alta 
+efectividad para encontrar la regi\'on \'optima global, se obtiene muy buena 
+soluci\'on aunque ne se haya explorado todo el espacio de b\'usqueda.
+
+Por lo tanto se concluye que en situaciones similares a la resuelta en este 
+trabajo es superior algoritmos gen\'eticos.
+
+La optimizaci\'on de un proceso de respuesta m\'ultiple se refiere a determinar
+los valores de las variables controlables en el que todas las caracter\'isticas
+de calidad cumplan con los requerimientos de la mejor manera posible.
+
+Los m\'etodos de optimizaci\'on se eval\'uan tomando como medidas de 
+desempe\~no, su efectividad para encontrar un \'optimo global y las limitaciones
+que tiene cada m\'etodo para poder aplicarse, y as\'i establecer ventajas y 
+desventajas de cada uno de ellos, para obtener que m\'etodo de \'optimizaci\'on
+es m\'as eficiente para dar una soluci\'on a problemas con respuestas 
+m\'ultiples.
+
+\subsection{Definici\'on del problema}
+Sea $\vec Y=(y_1,y_2,...,y_n)$ un vector en $R^n$ que representa las $n$ 
+caracter\'isticas de calidad a optimizar de un proceso, en el que los valores de
+sus componentes dependen del vector $\vec X=(x_1,x_2,...,x_k)$, donde $k$ 
+representa el n\'umero de factores controlables en el proceso.
+
+El problema consiste en determinar el vector $XR^k$, tal que optimice la 
+funci\'on vectorial
+$$Y_i=f_1(x_1,x_2,...,x_k).$$
+
+Diversos dise\~nos de experimentos involucran m\'a de una respuesta. Lo t\'ipico
+seg\'un De la Vara(2002), es que la calidad del producto dependa del valor que
+asume m\'as de una de sus propiedades. Muchas veces solo una de las 
+caracter\'isticas del proceso hace que las otras propiedades se vean afectadas
+y el resultado es un proceso con pero calidad global que antes. De aqu\'i la 
+importancia de contar con t\'ecnicas que sirvan para optimizar de manera
+simult\'aneaa todas las respuestas de interes. (Guti\'errez {\it et al, 2004}.
+
+\subsection{Problema de respuesta m\'ultiple}
+Cuando se tienen varias respuestas a considerar, este problema es llamado como
+problema de respuesta m\'ultiple o problemas de optimizaci\'on simult\'anea. 
+
+La consideraci\'on de respuestas m\'ultiples implica primera una constricci\'on 
+apropiada de un modelo de superficie de respuestapara cada respuesta y despu\'es
+tratar de encontrar un conjunto de condiciones de operaci\'on que en alg\'un 
+sentido optimiza todas las respuestas o al menos las mantiene en intervalos 
+deseados.
+
+Existen m\'etodos de optimizaci\'on para resolver problemas de m\'ultiples 
+respuestas como el de b\'usqueda exhaustiva, m\'etodo gr\'afico, simplex de 
+Nelder y Mead, gradiente reducido generalizado y algoritmos gen\'eticos. Escoger
+el m\'etodo de optimizaci\'on podr\'ia determinar si el problema se resuelve 
+r\'apido o lento, e incluso, si el problema se resuelve o no. (Evaristo, 2009)
+
+\subsection{Funci\'on deseabilidad}
+Si por alg\'un motivo las propiedades pueden ser medidas en unidades 
+consistentes, o incluso mejor, pueden ser expresadas como n\'umeros en una 
+escala dimensional, entonces intentar combinar las escalas de medici\'on con
+operadores aritm\'eticos es factible. Para desarrollar una transformaci\'on de
+escalas, es necesario describir una escala com\'un para todas y para las cuales
+algunas significancia f\'isica puede ser irrelevante, interpretada en t\'erminos
+de deseabilidad para cualquier aplicaci\'on espec\'ifica (Harrington,1965).
+
+La clase m\'as simple  de transformaciones se basa en que existe l\'imites de
+especificaci\'on, los cuales vienen a ser la base y criterio inalterable de 
+calidad. Afuera de estos l\'imites el valor de $d$ es cero, adentro de estos 
+l\'imites es $O<d<1$ (Harrington, 1965).
+
+La funci\'on deseabilidad primero convierte cada respuesta $y_i$ en una 
+funci\'on de deseabilidad individual $d_i$ que var\'ia en un intervalo de 
+$$0<d_i<1$$
+donde si $d_i$ es igual a 1 significa que la correspondiente respuesta predicha
+$y_i$ toma su valor m\'aximo deseable y si $d=0$ la respuesta $d_i$ predice un 
+valor inaceptable  y en este caso significa que la deseabilidad global es cero.
+
+\subsection{Funci\'on deseabilidad Derringer}
+Suponiendo que las variables $Y_i$ por especializaciones inferiores y superios
+$EI_i$ y $ES_i$ y su valor objetivo o nominal es $T_i$ se define la 
+transformaci\'on $d_i$, suponiendo que exista un l\'imite de especificaci\'on, 
+lo que se hace es tomar el valor objetivo $T_i$ igual al valor a partir del cual
+se considera que no hay ganancia adicional en la calidad de la respuesta. Las
+transformaciones est\'an dadas por
+
+La funci\'on aptitud se define como la deseabilidad global, que est\'a dada por
+la media geom\'etrica de las deseabilidades individuales, las cuales se obtienen
+de la siguiente  manera
+\begin{itemize}
+\item<1-> Se obtienen los valores objetivos de cada respuesta, valores m\'inimos
+de cada respuesta y los modelos de predicci\'on.
+\item<2-> Se substituye los valores de las variables independientes en los 
+modelos de predicci\'on de cada respuesta.
+\item<3-> Se utilizan los valores que arrojan los modelos de predicci\'on para
+especificar la funci\'on de deseabilidad individual para cada respuesta mediante
+la funci\'on deseabilidad de Derringer, la cual se obtiene de la siguiente 
+manera:
+\end{itemize}
+
+El problema puede requerir demasiado tiempo para converger debido a que el 
+n\'umero de soluciones es exponencial al n\'umero de factores involucrados en el
+proceso, su tiempo de soluci\'on o costo computacional tambi\'en se convierte en
+exponencial.
+
+\section{Tesis Evaro}
+Optimizaci\'on es una importante herramienta en la toma de decisiones y en el 
+an\'alisis se sistemas f\'isicos. Para optimizar se requiere definir una medida
+cuantitativa a maximizar (o minimizar). Esta medida cuantitativa se le llama 
+funci\'on costo. 
+
+La funci\'on aptitud se define sobre la representaci\'on gen\'etica y mide la
+calidad de la soluci\'on representada. En el presente problema, se determian el 
+error en el ajuste de la funci\'on direcciional a los datos de los radares HF.
+
+\section{Texturas}
+Despu\'es de tener cuatro grupos de texturas con cinco y seis ceros en las 
+matrices de masa, se quiere ver la compatibilidad con los datos de mezcla de
+los quarks.
